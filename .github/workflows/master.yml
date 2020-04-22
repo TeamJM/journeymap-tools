@@ -1,0 +1,52 @@
+name: Master
+runs-on: windows-latest
+
+on:
+  push:
+    branches:    
+      - master 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Set up Java
+        uses: actions/setup-java@v1.0.0
+
+        with:
+          version: 1.12
+
+      - name: Gradle Build
+        run: sh gradlew build createAllExecutables
+
+      - name: Build Installer
+        run: ISSC.exe src/main/inno/setup.iss
+
+      - name: Rename Artifacts
+        run: |
+          powershell /c mv build/libs/*-SNAPSHOT.jar build/libs/JourneyMapTools-slim.jar
+          powershell /c mv build/libs/*-SNAPSHOT-all.jar build/libs/JourneyMapTools.jar
+
+      - name: Upload artifact (Slim JAR)
+        uses: actions/upload-artifact@v1.0.0
+
+        with:
+          name: Slim JAR
+          path: build/libs/JourneyMapTools-slim.jar
+
+      - name: Upload artifact (Production JAR)
+        uses: actions/upload-artifact@v1.0.0
+
+        with:
+          name: Production JAR
+          path: build/libs/JourneyMapTools.jar
+
+      - name: Upload artifact (Windows Installer)
+        uses: actions/upload-artifact@v1.0.0
+
+        with:
+          name: Windows Installer
+          path: build/innosetup/JMToolsSetup.exe
