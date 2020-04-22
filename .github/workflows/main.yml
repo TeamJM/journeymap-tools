@@ -24,7 +24,7 @@ jobs:
         run: sh gradlew build createAllExecutables
 
       - name: Build Installer
-        run: ISSC.exe src/main/inno/setup.iss
+        run: iscc src/main/inno/setup.iss
 
       - name: Rename Artifacts
         run: |
