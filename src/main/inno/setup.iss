@@ -2,9 +2,9 @@
 AppName=JourneyMap Tools
 AppVersion=1.0
 DefaultDirName={autopf}\JourneyMap Tools
+DefaultGroupName=JourneyMap
 OutputBaseFilename=JMToolsSetup
 OutputDir="..\..\..\build\innosetup\"
-PrivilegesRequiredOverridesAllowed=dialog
 
 [Dirs]
 Name: "{app}\lib"
