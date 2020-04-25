@@ -1,102 +1,160 @@
 package info.journeymap.tools.views
 
-import javafx.beans.property.SimpleStringProperty
+import info.journeymap.tools.constants.GridType
+import info.journeymap.tools.constants.MainViewStyle
+import info.journeymap.tools.constants.MapType
+import info.journeymap.tools.constants.WorldType
+import info.journeymap.tools.controllers.MainController
 import javafx.geometry.Pos
-import javafx.scene.control.TextField
 import javafx.scene.control.Tooltip
+import javafx.scene.image.Image
 import javafx.scene.layout.Priority
-import javafx.scene.paint.Color
 import tornadofx.*
-import java.io.File
 
 class MainView : View() {
-    val minecraftPath = SimpleStringProperty(getDefaultMinecraftPath())
-    var lastDirectory = File(minecraftPath.value)
-
-    lateinit var minecraftPathInput: TextField
-    lateinit var minecraftPathTooltip: Tooltip
+    val controller: MainController by inject()
 
     override val root = vbox {
         this.paddingAll = 10
         this.spacing = 10.0
 
+        // Minecraft directory input
         hbox {
-            this.alignment = Pos.CENTER_LEFT
-            this.spacing = 10.0
+            alignment = Pos.CENTER_LEFT
+            spacing = 10.0
 
             label("Minecraft Directory")
 
-            minecraftPathInput = textfield(minecraftPath) {
-                minecraftPathTooltip = tooltip()
+            textfield(controller.minecraftDirectoryPath) {
+                hgrow = Priority.ALWAYS
 
-                this.hgrow = Priority.ALWAYS
+                bindClass(controller.textInputClass)
+
+                setOnAction { validatePath() }
+                tooltipProperty().bind(controller.textInputTooltip)
+
+                focusedProperty().addListener { _, _, newValue ->
+                    if (!newValue) {
+                        validatePath()
+                    }
+                }
             }
 
             button("Browse") {
-                this.hgrow = Priority.ALWAYS
-                this.minWidth = 50.0
+                hgrow = Priority.ALWAYS
+                minWidth = 50.0
             }.action {
-                val directory = chooseDirectory("Select Minecraft Directory", lastDirectory)
+                var openingDirectory = controller.minecraftDirectory
 
-                if (directory == null) {
-                    minecraftPath.value = null
-                    lastDirectory = File(getDefaultMinecraftPath())
-                } else {
-                    minecraftPath.value = directory.path
-                    lastDirectory = directory
+                if (openingDirectory != null && (!openingDirectory.exists() || !openingDirectory.isDirectory)) {
+                    openingDirectory = null
                 }
 
+                val directory = chooseDirectory("Select Minecraft Directory", openingDirectory)
+                controller.minecraftDirectory = directory
+
                 validatePath()
+            }
+        }
+
+        separator {  }
+
+        // Map settings
+        gridpane {
+            alignment = Pos.CENTER_LEFT
+            hgap = 10.0
+            vgap = 10.0
+            useMaxWidth = true
+
+            (0..3).forEach {
+                constraintsForColumn(it).percentWidth = when {
+                    (it % 2) == 0 -> 20.0
+                    else -> 30.0
+                }
+            }
+
+            row { // Row 1
+                label("World Type")
+                combobox<WorldType>(controller.worldTypeProperty(), controller.worldTypes) {
+                    useMaxWidth = true
+
+                    enableWhen(controller.textInputValid)
+                }
+
+                label("World")
+                combobox<String>() {
+                    useMaxWidth = true
+
+                    enableWhen(controller.textInputValid)
+                }
+            }
+            row { // Row 2
+                label("Map Type")
+                combobox<MapType>(controller.mapTypeProperty(), controller.mapTypes) {
+                    useMaxWidth = true
+
+                    enableWhen(controller.textInputValid)
+
+                }
+
+                label("Dimension")
+                combobox<String>() {
+                    useMaxWidth = true
+
+                    enableWhen(controller.textInputValid)
+                }
+            }
+            row { // Row 3
+                label("Surface Layer")
+                spinner<Number>(property = controller.layer, min = 0, max = 15) {
+                    useMaxWidth = true
+
+                    enableWhen(controller.textInputValid.and(controller.mapTypeProperty().isEqualTo(MapType.UNDERGROUND)))
+                }
+
+                label("Grid")
+                combobox<GridType>(controller.gridTypeProperty(), controller.gridTypes) {
+                    useMaxWidth = true
+
+                    enableWhen(controller.textInputValid)
+                }
+            }
+        }
+
+        separator {  }
+
+        // Progress/action button
+        hbox {
+            alignment = Pos.CENTER_LEFT
+            spacing = 10.0
+
+            progressbar(0.0) {
+                hgrow = Priority.ALWAYS
+                useMaxWidth = true
+            }
+            button("Export") {
+                hgrow = Priority.ALWAYS
             }
         }
     }
 
     init {
-        this.setWindowMinSize(600, 500)
+        setStageIcon(Image(MainView::class.java.classLoader.getResourceAsStream("jm.png")))
+        currentStage?.isResizable = false
+
+        this.setWindowMinSize(600, 230)
         this.title = "JourneyMap Tools"
 
         this.validatePath()
     }
 
-    fun checkMinecraftPath(): Boolean {
-        val pathFile = this.lastDirectory
-        val jmFile = pathFile.resolve("journeymap")
-
-        if (! (pathFile.exists() && pathFile.isDirectory && jmFile.exists() && jmFile.isDirectory)) {
-            return false
-        }
-
-        val dataFile = jmFile.resolve("data")
-
-        if (! (dataFile.exists() && dataFile.isDirectory())) {
-            return false
-        }
-
-        return true
-    }
-
     fun validatePath() {
-        if (! this.checkMinecraftPath()) {
-            this.minecraftPathInput.style() {
-                this.baseColor = Color.valueOf("#FF6666")
-            }
-
-            this.minecraftPathTooltip.text = "Unable to find a valid JourneyMap data directory"
+        if (!this.controller.isValidMinecraftDirectory()) {
+            this.controller.textInputValid.set(false)
+            this.controller.textInputTooltip.set(Tooltip("Unable to find a valid JourneyMap data directory"))
         } else {
-            this.minecraftPathInput.style = null
-            this.minecraftPathTooltip.text = null
+            this.controller.textInputValid.set(true)
+            this.controller.textInputTooltip.set(null)
         }
-    }
-
-    fun getDefaultMinecraftPath(): String {
-        val OS = System.getProperty("os.name").toUpperCase()
-
-        val baseDirectory = if (OS.contains("WIN")) {
-            System.getenv("APPDATA")
-        } else {
-            System.getProperty("user.home")
-        }
-
-        return "${baseDirectory}${File.separator}.minecraft"
     }
 }
