@@ -3,11 +3,13 @@ AppName=JourneyMap Tools
 AppVersion=1.0
 DefaultDirName={autopf}\JourneyMap Tools
 DefaultGroupName=JourneyMap
+LicenseFile=LICENSE.rtf
 OutputBaseFilename=JMToolsSetup
 OutputDir="..\..\..\build\innosetup\"
 
 [Dirs]
 Name: "{app}\lib"
+Name: "{app}\jdk-11.0.7+10-jre"
 
 [Files]
 Source: "..\..\..\build\launch4j\JMTools.exe"; \
@@ -18,6 +20,10 @@ Source: "..\resources\jm.ico"; \
 
 Source: "..\..\..\build\launch4j\lib\*"; \
         DestDir: "{app}/lib"
+
+Source: "..\..\..\jdk-11.0.7+10-jre\*"; \
+        DestDir: "{app}\jdk-11.0.7+10-jre"; \
+        Flags: createallsubdirs recursesubdirs
 
 [Icons]
 Name: "{userdesktop}\JourneyMap Tools"; \

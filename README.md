@@ -16,10 +16,14 @@ Please also take a look at the [Code of Conduct](CONDUCT.md) before posting an i
 
 # Setting Up
 
-We provide a standalone JAR download, and an installer for Windows. Please note that whichever method you pick,
+We provide a standalone JAR download, and an installer for Windows. Please note that if you pick the standalone JAR, 
 you will need to have **Java 11 or later** installed.
 
+**This toolkit only supports 64-bit systems!**
+
 ## Installer (Windows only)
+
+This installer contains a copy of the Java runtime, so you don't need to install it yourself.
 
 1. Head to the [releases page](releases) and download the installer for the latest version.
 2. Run the installer. If Microsoft SmartScreen pops up, click on the `More Info` link, and then the
@@ -92,7 +96,7 @@ done this, all you need to do is sit back and wait for the map to be exported!
 If you're trying to open the toolkit and nothing is happening, then you're probably running it with the wrong version
 of Java.
 
-1. Ensure that you have **Java 11 or later** installed.
+1. Ensure that you have **Java 11 or later** installed, or that you're using the Windows installer.
 2. Ensure that your system's default version of Java is Java 11.
 3. Try running the standalone JAR from a terminal - `java -jar JMTools.jar`
 

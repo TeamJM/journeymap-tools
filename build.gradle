@@ -11,6 +11,7 @@ plugins {
 }
 
 group 'info.journeymap.tools'
+targetCompatibility = 1.11
 version '1.0'
 
 repositories {
@@ -39,9 +40,17 @@ compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
 
+jar {
+    manifest {
+        attributes(
+                "Main-Class": "info.journeymap.tools.JourneyMapToolsKt"
+        )
+    }
+}
+
 javafx {
     version = "14"
-    modules = [ 'javafx.controls' ]
+    modules = ['javafx.controls']
 }
 
 kapt {
@@ -51,8 +60,11 @@ kapt {
 }
 
 launch4j {
+    bundledJrePath = "jdk-11.0.7+10-jre"
+    bundledJre64Bit = true
+    copyright = "TeamJM"
+    icon = "${projectDir}/src/main/resources/jm.ico"
+    mainClassName = "info.journeymap.tools.JourneyMapToolsKt"
     outfile = "JMTools.exe"
     productName = "JourneyMap Tools"
-    mainClassName = "info.journeymap.tools.JourneyMapToolsKt"
-    icon = "${projectDir}/src/main/resources/jm.ico"
 }

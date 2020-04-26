@@ -86,4 +86,7 @@ gradle-app.setting
 
 # Local testing lang files
 /test/
+
+### Custom ignores
 /blank.png
+/jdk-*-jre/
