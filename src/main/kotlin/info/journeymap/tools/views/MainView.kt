@@ -5,6 +5,9 @@ import info.journeymap.tools.constants.MainViewStyle
 import info.journeymap.tools.constants.MapType
 import info.journeymap.tools.constants.WorldType
 import info.journeymap.tools.controllers.MainController
+import info.journeymap.tools.models.Dimension
+import info.journeymap.tools.models.World
+import javafx.beans.property.SimpleBooleanProperty
 import javafx.geometry.Pos
 import javafx.scene.control.Tooltip
 import javafx.scene.image.Image
@@ -30,12 +33,14 @@ class MainView : View() {
 
                 bindClass(controller.textInputClass)
 
-                setOnAction { validatePath() }
+                setOnAction {
+                    controller.minecraftDirectoryPath.set(this.text)
+                }
                 tooltipProperty().bind(controller.textInputTooltip)
 
                 focusedProperty().addListener { _, _, newValue ->
                     if (!newValue) {
-                        validatePath()
+                        controller.minecraftDirectoryPath.set(this.text)
                     }
                 }
             }
@@ -52,8 +57,6 @@ class MainView : View() {
 
                 val directory = chooseDirectory("Select Minecraft Directory", openingDirectory)
                 controller.minecraftDirectory = directory
-
-                validatePath()
             }
         }
 
@@ -75,38 +78,33 @@ class MainView : View() {
 
             row { // Row 1
                 label("World Type")
-                combobox<WorldType>(controller.worldTypeProperty(), controller.worldTypes) {
+                combobox<WorldType>(controller.worldTypeProperty(), controller.validWorldTypes) {
                     useMaxWidth = true
-
                     enableWhen(controller.textInputValid)
                 }
 
                 label("World")
-                combobox<String>() {
+                combobox<World>(controller.world, controller.validWorlds) {
                     useMaxWidth = true
-
                     enableWhen(controller.textInputValid)
                 }
             }
             row { // Row 2
-                label("Map Type")
-                combobox<MapType>(controller.mapTypeProperty(), controller.mapTypes) {
+                label("Dimension")
+                combobox<Dimension>(controller.dimension, controller.validDimensions) {
                     useMaxWidth = true
-
                     enableWhen(controller.textInputValid)
-
                 }
 
-                label("Dimension")
-                combobox<String>() {
+                label("Map Type")
+                combobox<MapType>(controller.mapTypeProperty(), controller.validMapTypes) {
                     useMaxWidth = true
-
                     enableWhen(controller.textInputValid)
                 }
             }
             row { // Row 3
                 label("Surface Layer")
-                spinner<Number>(property = controller.layer, min = 0, max = 15) {
+                spinner<Int>(items = controller.validLayers, property = controller.layer) {
                     useMaxWidth = true
 
                     enableWhen(controller.textInputValid.and(controller.mapTypeProperty().isEqualTo(MapType.UNDERGROUND)))
@@ -116,7 +114,11 @@ class MainView : View() {
                 combobox<GridType>(controller.gridTypeProperty(), controller.gridTypes) {
                     useMaxWidth = true
 
-                    enableWhen(controller.textInputValid)
+                    // TODO: Investigate mechanism, add more grid types?
+
+//                    enableWhen(controller.textInputValid)
+                    // TODO: Enable when we figure this out
+                    enableWhen { SimpleBooleanProperty(false) }
                 }
             }
         }
@@ -134,6 +136,8 @@ class MainView : View() {
             }
             button("Export") {
                 hgrow = Priority.ALWAYS
+
+                enableWhen(controller.textInputValid)
             }
         }
     }
@@ -145,16 +149,6 @@ class MainView : View() {
         this.setWindowMinSize(600, 230)
         this.title = "JourneyMap Tools"
 
-        this.validatePath()
-    }
-
-    fun validatePath() {
-        if (!this.controller.isValidMinecraftDirectory()) {
-            this.controller.textInputValid.set(false)
-            this.controller.textInputTooltip.set(Tooltip("Unable to find a valid JourneyMap data directory"))
-        } else {
-            this.controller.textInputValid.set(true)
-            this.controller.textInputTooltip.set(null)
-        }
+        this.controller.validateMinecraftDirectory()
     }
 }
