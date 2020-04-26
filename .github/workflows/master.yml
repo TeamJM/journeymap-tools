@@ -26,8 +26,8 @@ jobs:
 
       - name: Rename Artifacts
         run: |
-          powershell /c mv build/libs/*-SNAPSHOT.jar build/libs/JourneyMapTools-slim.jar
-          powershell /c mv build/libs/*-SNAPSHOT-all.jar build/libs/JourneyMapTools.jar
+          powershell /c mv build/libs/*-all.jar build/libs/JourneyMapTools.jar
+          powershell /c mv build/libs/*-*.*.jar build/libs/JourneyMapTools-slim.jar
 
       - name: Upload artifact (Slim JAR)
         uses: actions/upload-artifact@v1.0.0
