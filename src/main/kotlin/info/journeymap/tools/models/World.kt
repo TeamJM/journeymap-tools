@@ -9,7 +9,11 @@ class World(val directory: File) {
         val dimensions: MutableList<Dimension> = mutableListOf()
 
         this.directory.listFiles()!!.filter { it.name.startsWith("DIM") }.forEach {
-            dimensions.add(Dimension(it))
+            val dimension = Dimension(it)
+
+            if (dimension.mapTypes.isNotEmpty() || dimension.layers.isNotEmpty()) {
+                dimensions.add(dimension)
+            }
         }
 
         this.dimensions = dimensions.toList()

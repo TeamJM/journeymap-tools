@@ -16,11 +16,11 @@ class Dimension(val directory: File) {
         val layers: MutableList<Int> = mutableListOf()
         val mapTypes: MutableList<MapType> = mutableListOf()
 
-        this.directory.list()!!.forEach {
-            if (it.isInt()) {
-                layers.add(it.toInt())
+        this.directory.listFiles()!!.filter { it.isDirectory && it.list()!!.isNotEmpty() }.forEach {
+            if (it.name.isInt()) {
+                layers.add(it.name.toInt())
             } else {
-                when (it) {
+                when (it.name) {
                     "day"   -> mapTypes.add(MapType.SURFACE_DAY)
                     "night" -> mapTypes.add(MapType.SURFACE_NIGHT)
                     "topo"  -> mapTypes.add(MapType.SURFACE_TOPO)

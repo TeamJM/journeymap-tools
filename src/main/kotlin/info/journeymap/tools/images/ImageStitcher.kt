@@ -2,6 +2,9 @@ package info.journeymap.tools.images
 
 import ar.com.hjg.pngj.*
 import ar.com.hjg.pngj.chunks.ChunkLoadBehaviour
+import info.journeymap.tools.constants.GridType
+import tornadofx.FXTask
+import tornadofx.TaskStatus
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.IOException
@@ -12,7 +15,11 @@ import java.util.*
 import javax.imageio.ImageIO
 
 class ImageStitcher(val directory: File) {
-    fun stitch(destination: File) {
+    fun stitch(destination: File, gridType: GridType, task: FXTask<*>) {
+        task.updateProgress(0, 1)
+        task.updateTitle("Loading...")
+        task.updateMessage("Loading...")
+
         val sourceFiles = this.directory.listFiles()!!.filter { it.extension == "png" }.toList()
         val tileCoordinates: MutableMap<Pair<Int, Int>, File> = mutableMapOf()
 
@@ -67,6 +74,9 @@ class ImageStitcher(val directory: File) {
         val gridColour = 135
 
         var destinationRow = 0
+        val progressMax = (rows * columns).toLong()
+
+        task.updateTitle("Processing...")
 
         for (row in 0 until rows) {
             // I have no idea what's going on here, porting is hard
@@ -88,28 +98,36 @@ class ImageStitcher(val directory: File) {
             }
 
             rowCopy@ for (sourceRow in 0 until 512) {
-                for (x in 0 until xCursor) {
-                    val sourceLine = readers[x].readRow(sourceRow) as ImageLineInt
-                    val source = sourceLine.scanline
+                for (column in 0 until xCursor) {
+                    if (sourceRow == 0) {  // Update task progress
+                        val progress = (row.toLong() * columns) + column
 
-                    // TODO: Grid setting
-                    // region: Grid
-                    val skip = if (sourceRow % 16 == 0) {
-                        4
-                    } else {
-                        64
+                        task.updateProgress(progress, progressMax)
+                        task.updateMessage("Current tile: $progress / $progressMax")
                     }
 
-                    for (i in 0 .. (source.size - skip) step skip) {
-                        source[i] = ((source[i] * 2) + gridColour) / 3
-                        source[i + 1] = ((source[i + 1] * 2) + gridColour) / 3
-                        source[i + 2] = ((source[i + 2] * 2) + gridColour) / 3
-                        source[i + 3] = 255
+                    val sourceLine = readers[column].readRow(sourceRow) as ImageLineInt
+                    val source = sourceLine.scanline
+
+                    // region: Grid
+                    if (gridType == GridType.LINES) {
+                        val skip = if (sourceRow % 16 == 0) {
+                            4
+                        } else {
+                            64
+                        }
+
+                        for (i in 0..(source.size - skip) step skip) {
+                            source[i] = ((source[i] * 2) + gridColour) / 3
+                            source[i + 1] = ((source[i + 1] * 2) + gridColour) / 3
+                            source[i + 2] = ((source[i + 2] * 2) + gridColour) / 3
+                            source[i + 3] = 255
+                        }
                     }
                     // endregion
 
                     val dest = line.scanline
-                    val destPosition = lineLength * x
+                    val destPosition = lineLength * column
 
                     try {
                         System.arraycopy(source, 0, dest, destPosition, lineLength)
@@ -128,6 +146,9 @@ class ImageStitcher(val directory: File) {
             }
         }
 
+        task.updateProgress(progressMax, progressMax)
+        task.updateTitle("Done!")
+        task.updateMessage("Done!")
         writer.end()
     }
 

@@ -1,7 +1,6 @@
 package info.journeymap.tools.views
 
 import info.journeymap.tools.constants.GridType
-import info.journeymap.tools.constants.MainViewStyle
 import info.journeymap.tools.constants.MapType
 import info.journeymap.tools.constants.WorldType
 import info.journeymap.tools.controllers.MainController
@@ -10,7 +9,6 @@ import info.journeymap.tools.models.Dimension
 import info.journeymap.tools.models.World
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.geometry.Pos
-import javafx.scene.control.Tooltip
 import javafx.scene.image.Image
 import javafx.scene.layout.Priority
 import javafx.stage.FileChooser
@@ -19,6 +17,7 @@ import java.io.File
 
 class MainView : View() {
     val controller: MainController by inject()
+    val taskStatus: TaskStatus by inject()
 
     override val root = vbox {
         this.paddingAll = 10
@@ -51,19 +50,21 @@ class MainView : View() {
             button("Browse") {
                 hgrow = Priority.ALWAYS
                 minWidth = 50.0
-            }.action {
-                var openingDirectory = controller.minecraftDirectory
 
-                if (openingDirectory != null && (!openingDirectory.exists() || !openingDirectory.isDirectory)) {
-                    openingDirectory = null
+                action {
+                    var openingDirectory = controller.minecraftDirectory
+
+                    if (openingDirectory != null && (!openingDirectory.exists() || !openingDirectory.isDirectory)) {
+                        openingDirectory = null
+                    }
+
+                    val directory = chooseDirectory("Select Minecraft Directory", openingDirectory)
+                    controller.minecraftDirectory = directory
                 }
-
-                val directory = chooseDirectory("Select Minecraft Directory", openingDirectory)
-                controller.minecraftDirectory = directory
             }
         }
 
-        separator {  }
+        separator { }
 
         // Map settings
         gridpane {
@@ -75,7 +76,7 @@ class MainView : View() {
             (0..3).forEach {
                 constraintsForColumn(it).percentWidth = when {
                     (it % 2) == 0 -> 20.0
-                    else -> 30.0
+                    else          -> 30.0
                 }
             }
 
@@ -117,34 +118,39 @@ class MainView : View() {
                 combobox<GridType>(controller.gridTypeProperty(), controller.gridTypes) {
                     useMaxWidth = true
 
-                    // TODO: Investigate mechanism, add more grid types?
-
-//                    enableWhen(controller.textInputValid)
-                    // TODO: Enable when we figure this out
-                    enableWhen { SimpleBooleanProperty(false) }
+                    enableWhen(controller.textInputValid)
                 }
             }
         }
 
-        separator {  }
+        separator { }
 
         // Progress/action button
         hbox {
             alignment = Pos.CENTER_LEFT
             spacing = 10.0
 
-            progressbar(0.0) {
+            label(taskStatus.message)
+
+            progressbar(taskStatus.progress) {
                 hgrow = Priority.ALWAYS
                 useMaxWidth = true
             }
             button("Export") {
                 hgrow = Priority.ALWAYS
 
-                enableWhen(controller.textInputValid)
+                enableWhen(
+                        controller.textInputValid
+                                .and(controller.world.isNotNull)
+                                .and(controller.worldTypeProperty().isNotNull)
+                                .and(controller.dimension.isNotNull)
+                                .and(controller.mapTypeProperty().isNotNull)
+                                .and(taskStatus.running.not())
+                )
                 action {
                     val targetFiles = chooseFile(
                             "Save map as...",
-                            filters = arrayOf(FileChooser.ExtensionFilter("PNG files", ".png")),
+                            filters = arrayOf(FileChooser.ExtensionFilter("PNG files", "*.png")),
                             mode = FileChooserMode.Save
                     )
 
@@ -155,14 +161,13 @@ class MainView : View() {
                             controller.dimension.value.getLayerDirectory(controller.layer.value)
                         } else {
                             controller.dimension.value.getMapDirectory(controller.mapType)
-                        })
-                                // TODO: Check on null value that
-                                ?:return@action
+                        }) ?: return@action  // Should never be null, but checked for safety
 
                         val stitcher = ImageStitcher(dimDirectory)
 
-                        // TODO: Async and progress
-                        stitcher.stitch(target)
+                        runAsync {
+                            stitcher.stitch(target, controller.gridType, this)
+                        }
                     }
                 }
             }

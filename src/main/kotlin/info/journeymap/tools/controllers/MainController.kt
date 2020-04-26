@@ -89,13 +89,12 @@ class MainController : Controller() {
 
         this.world.onChange {
             var dimension: List<Dimension> = listOf()
-            var mapTypes: List<MapType> = listOf()
-            var layers: List<Int> = listOf()
 
-            if (this.dimension.value != null) {
-                mapTypes = this.dimension.value!!.mapTypes
-                layers = this.dimension.value!!.layers
-            }
+            val mapTypes: List<MapType> = listOf()
+            val layers: List<Int> = listOf()
+
+            this.dimension.set(null)
+            this.mapTypeProperty().set(null)
 
             if (this.world.value != null) {
                 dimension = this.world.value!!.dimensions
@@ -114,6 +113,8 @@ class MainController : Controller() {
                 layers = this.dimension.value!!.layers
                 mapTypes = this.dimension.value!!.mapTypes
             }
+
+            this.mapTypeProperty().set(null)
 
             this.validLayers.set(FXCollections.observableArrayList(layers))
             this.validMapTypes.set(FXCollections.observableArrayList(mapTypes))
