@@ -5,6 +5,7 @@ import info.journeymap.tools.constants.MainViewStyle
 import info.journeymap.tools.constants.MapType
 import info.journeymap.tools.constants.WorldType
 import info.journeymap.tools.controllers.MainController
+import info.journeymap.tools.images.ImageStitcher
 import info.journeymap.tools.models.Dimension
 import info.journeymap.tools.models.World
 import javafx.beans.property.SimpleBooleanProperty
@@ -12,7 +13,9 @@ import javafx.geometry.Pos
 import javafx.scene.control.Tooltip
 import javafx.scene.image.Image
 import javafx.scene.layout.Priority
+import javafx.stage.FileChooser
 import tornadofx.*
+import java.io.File
 
 class MainView : View() {
     val controller: MainController by inject()
@@ -138,6 +141,30 @@ class MainView : View() {
                 hgrow = Priority.ALWAYS
 
                 enableWhen(controller.textInputValid)
+                action {
+                    val targetFiles = chooseFile(
+                            "Save map as...",
+                            filters = arrayOf(FileChooser.ExtensionFilter("PNG files", ".png")),
+                            mode = FileChooserMode.Save
+                    )
+
+                    if (targetFiles.isNotEmpty()) {
+                        val target = targetFiles[0]
+
+                        val dimDirectory: File = (if (controller.mapType == MapType.UNDERGROUND) {
+                            controller.dimension.value.getLayerDirectory(controller.layer.value)
+                        } else {
+                            controller.dimension.value.getMapDirectory(controller.mapType)
+                        })
+                                // TODO: Check on null value that
+                                ?:return@action
+
+                        val stitcher = ImageStitcher(dimDirectory)
+
+                        // TODO: Async and progress
+                        stitcher.stitch(target)
+                    }
+                }
             }
         }
     }
