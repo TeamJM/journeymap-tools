@@ -58,9 +58,12 @@ class ImageStitcher(val directory: File) {
         val tiles: MutableList<File> = mutableListOf()
         val progressMax = (rows * columns).toLong()
 
+        var curZ = 0L
+        var curX = 0L
+
         for (z in minZ .. maxZ) {
             for (x in minX .. maxX) {
-                progress = ((z.toLong() * columns) + x)
+                progress = ((curZ * columns) + curX)
 
                 task.updateProgress(progress, progressMax)
                 task.updateTitle("Generating: $x, $z ($progress / $progressMax)")
@@ -73,7 +76,11 @@ class ImageStitcher(val directory: File) {
                 } else {
                     tiles.add(this.getBlankImageFile())
                 }
+
+                curX += 1
             }
+
+            curZ += 1
         }
 
         task.updateTitle("Processing...")
