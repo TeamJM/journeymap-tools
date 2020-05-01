@@ -60,7 +60,7 @@ class ImageStitcher(val directory: File) {
 
         for (z in minZ .. maxZ) {
             for (x in minX .. maxX) {
-                progress = ((z.toLong() * columns) + x).toLong()
+                progress = ((z.toLong() * columns) + x)
 
                 task.updateProgress(progress, progressMax)
                 task.updateTitle("Generating: $x, $z ($progress / $progressMax)")
@@ -120,7 +120,7 @@ class ImageStitcher(val directory: File) {
             rowCopy@ for (sourceRow in 0 until 512) {
                 for (column in 0 until xCursor) {
                     if (sourceRow == 0) {  // Update task progress
-                        progress = ((row.toLong() * columns) + column).toLong()
+                        progress = ((row.toLong() * columns) + column)
 
                         task.updateProgress(progress, progressMax)
                         task.updateMessage("Current tile: $progress / $progressMax")
