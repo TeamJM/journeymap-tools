@@ -28,7 +28,13 @@ class ImageStitcher(val directory: File) {
         var maxZ: Int = Int.MIN_VALUE
         var minZ: Int = Int.MAX_VALUE
 
+        var progress = 0.0
+
         sourceFiles.forEach { it ->
+            task.updateProgress(progress, sourceFiles.size.toDouble())
+            task.updateTitle("Inspecting: ${it.name}")
+            task.updateMessage("Inspecting: ${it.name}")
+
             val split = it.nameWithoutExtension.split(',')
             val (x, z) = split.map { element -> element.toInt() }.toList()
 
@@ -39,14 +45,27 @@ class ImageStitcher(val directory: File) {
             minZ = min(minZ, z)
 
             tileCoordinates[Pair(x, z)] = it
+
+            progress += 1.0
         }
+
+        task.updateProgress(0, 1)
+        task.updateTitle("Generating tiles...")
+        task.updateMessage("Generating tiles...")
 
         val columns = (maxX - minX) + 1
         val rows = (maxZ - minZ) + 1
         val tiles: MutableList<File> = mutableListOf()
+        val progressMax = (rows * columns).toDouble()
 
         for (z in minZ .. maxZ) {
             for (x in minX .. maxX) {
+                progress = ((z.toLong() * columns) + x).toDouble()
+
+                task.updateProgress(progress, progressMax)
+                task.updateTitle("Generating: $x X, $z Z")
+                task.updateMessage("Generating: $x X, $z Z")
+
                 val pair = Pair(x, z)
 
                 if (tileCoordinates.contains(pair)) {
@@ -56,6 +75,10 @@ class ImageStitcher(val directory: File) {
                 }
             }
         }
+
+        task.updateTitle("Processing...")
+        task.updateMessage("Processing...")
+        task.updateProgress(0, 1)
 
         val readers: MutableList<PngReader> = mutableListOf()
 
@@ -74,9 +97,6 @@ class ImageStitcher(val directory: File) {
         val gridColour = 135
 
         var destinationRow = 0
-        val progressMax = (rows * columns).toLong()
-
-        task.updateTitle("Processing...")
 
         for (row in 0 until rows) {
             // I have no idea what's going on here, porting is hard
@@ -100,10 +120,11 @@ class ImageStitcher(val directory: File) {
             rowCopy@ for (sourceRow in 0 until 512) {
                 for (column in 0 until xCursor) {
                     if (sourceRow == 0) {  // Update task progress
-                        val progress = (row.toLong() * columns) + column
+                        progress = ((row.toLong() * columns) + column).toDouble()
 
                         task.updateProgress(progress, progressMax)
                         task.updateMessage("Current tile: $progress / $progressMax")
+                        task.updateTitle("Current tile: $progress / $progressMax")
                     }
 
                     val sourceLine = readers[column].readRow(sourceRow) as ImageLineInt
