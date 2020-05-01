@@ -28,10 +28,10 @@ class ImageStitcher(val directory: File) {
         var maxZ: Int = Int.MIN_VALUE
         var minZ: Int = Int.MAX_VALUE
 
-        var progress = 0.0
+        var progress = 0L
 
         sourceFiles.forEach { it ->
-            task.updateProgress(progress, sourceFiles.size.toDouble())
+            task.updateProgress(progress, sourceFiles.size.toLong())
             task.updateTitle("Inspecting: ${it.name}")
             task.updateMessage("Inspecting: ${it.name}")
 
@@ -46,7 +46,7 @@ class ImageStitcher(val directory: File) {
 
             tileCoordinates[Pair(x, z)] = it
 
-            progress += 1.0
+            progress += 1
         }
 
         task.updateProgress(0, 1)
@@ -56,11 +56,11 @@ class ImageStitcher(val directory: File) {
         val columns = (maxX - minX) + 1
         val rows = (maxZ - minZ) + 1
         val tiles: MutableList<File> = mutableListOf()
-        val progressMax = (rows * columns).toDouble()
+        val progressMax = (rows * columns).toLong()
 
         for (z in minZ .. maxZ) {
             for (x in minX .. maxX) {
-                progress = ((z.toLong() * columns) + x).toDouble()
+                progress = ((z.toLong() * columns) + x).toLong()
 
                 task.updateProgress(progress, progressMax)
                 task.updateTitle("Generating: $x X, $z Z")
@@ -120,7 +120,7 @@ class ImageStitcher(val directory: File) {
             rowCopy@ for (sourceRow in 0 until 512) {
                 for (column in 0 until xCursor) {
                     if (sourceRow == 0) {  // Update task progress
-                        progress = ((row.toLong() * columns) + column).toDouble()
+                        progress = ((row.toLong() * columns) + column).toLong()
 
                         task.updateProgress(progress, progressMax)
                         task.updateMessage("Current tile: $progress / $progressMax")
