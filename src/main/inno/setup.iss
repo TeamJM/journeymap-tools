@@ -19,7 +19,8 @@ Source: "..\resources\jm.ico"; \
         DestDir: "{app}"
 
 Source: "..\..\..\build\launch4j\lib\*"; \
-        DestDir: "{app}/lib"
+        DestDir: "{app}/lib"; \
+        Excludes: "*linux*,*mac*"
 
 Source: "..\..\..\jdk-11.0.7+10-jre\*"; \
         DestDir: "{app}\jdk-11.0.7+10-jre"; \

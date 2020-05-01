@@ -15,6 +15,9 @@ import java.util.*
 import javax.imageio.ImageIO
 
 class ImageStitcher(val directory: File) {
+    private var blankFile: File = File.createTempFile("blank", ".png")
+    private var wroteBlankFile = false
+
     fun stitch(destination: File, gridType: GridType, task: FXTask<*>) {
         task.updateProgress(0, 1)
         task.updateTitle("Loading...")
@@ -90,7 +93,7 @@ class ImageStitcher(val directory: File) {
         val readers: MutableList<PngReader> = mutableListOf()
 
         (0..columns).forEach { _ ->
-            readers.add(PngReader(getBlankImageFile()))  // Populate the reader list
+            readers.add(PngReader(this.getBlankImageFile()))  // Populate the reader list
         }
 
         val targetImageInfo = ImageInfo(512 * columns, 512 * rows,8, true)
@@ -117,6 +120,11 @@ class ImageStitcher(val directory: File) {
 
             for (x in 0 until xCursor) {
                 val sourceFile = tiles[x + row * columns]
+
+                if (sourceFile == this.blankFile) {
+                    sourceFile.inputStream()
+                }
+
                 val reader = PngReader(sourceFile.inputStream())
 
                 reader.setChunkLoadBehaviour(ChunkLoadBehaviour.LOAD_CHUNK_NEVER)
@@ -181,21 +189,21 @@ class ImageStitcher(val directory: File) {
     }
 
     fun getBlankImageFile(): File {
-        val file = File(".", String.format("blank.png"))
-
-        if (!file.exists()) {
+        if (!this.wroteBlankFile) {
             val image = BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB)
             image.createGraphics()
 
             try {
-                ImageIO.write(image, "png", file)
-                file.setReadOnly()
-                file.deleteOnExit()
+                ImageIO.write(image, "png", blankFile)
+                this.blankFile.setReadOnly()
+                this.blankFile.deleteOnExit()
             } catch (e: IOException) {
                 e.printStackTrace(System.err)
             }
+
+            this.wroteBlankFile = true
         }
 
-        return file
+        return File(this.blankFile.absolutePath)
     }
 }
