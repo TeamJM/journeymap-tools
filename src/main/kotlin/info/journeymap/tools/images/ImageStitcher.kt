@@ -32,8 +32,8 @@ class ImageStitcher(val directory: File) {
 
         sourceFiles.forEach { it ->
             task.updateProgress(progress, sourceFiles.size.toLong())
-            task.updateTitle("Inspecting: ${it.name}")
-            task.updateMessage("Inspecting: ${it.name}")
+            task.updateTitle("Inspecting: ${it.name} (${progress + 1} / ${sourceFiles.size})")
+            task.updateMessage("Inspecting: ${it.name} (${progress + 1} / ${sourceFiles.size})")
 
             val split = it.nameWithoutExtension.split(',')
             val (x, z) = split.map { element -> element.toInt() }.toList()
@@ -63,8 +63,8 @@ class ImageStitcher(val directory: File) {
                 progress = ((z.toLong() * columns) + x).toLong()
 
                 task.updateProgress(progress, progressMax)
-                task.updateTitle("Generating: $x X, $z Z")
-                task.updateMessage("Generating: $x X, $z Z")
+                task.updateTitle("Generating: $x, $z ($progress / $progressMax)")
+                task.updateMessage("Generating: $x, $z ($progress / $progressMax)")
 
                 val pair = Pair(x, z)
 
