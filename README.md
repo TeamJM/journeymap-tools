@@ -25,7 +25,7 @@ you will need to have **Java 11 or later** installed.
 
 This installer contains a copy of the Java runtime, so you don't need to install it yourself.
 
-1. Head to the [releases page](releases) and download the installer for the latest version.
+1. Head to the [releases page](/releases) and download the installer for the latest version.
 2. Run the installer. If Microsoft SmartScreen pops up, click on the `More Info` link, and then the
    `Run anyway` button at the bottom.
 3. Once installed, you will find a `JourneyMap Tools` shortcut on your desktop, and in your start menu. Use that
@@ -33,7 +33,7 @@ This installer contains a copy of the Java runtime, so you don't need to install
 
 ## Standalone JAR (all platforms)
 
-1. Head to the [releases page](releases) and download the JAR for the latest version.
+1. Head to the [releases page](/releases) and download the JAR for the latest version.
 2. Save the JAR in its own folder, and create a shortcut to it on your desktop (or somewhere else within easy reach).
 3. Double-click the JAR or shortcut to start the toolkit.
 
@@ -101,4 +101,4 @@ of Java.
 3. Try running the standalone JAR from a terminal - `java -jar JMTools.jar`
 
 If you think you've found a problem, feel free to [contact us on Discord](https://discord.gg/eP8gE69) or head
-to [the issues page](issues) and open an issue.
+to [the issues page](/issues) and open an issue.
