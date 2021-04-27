@@ -1,6 +1,6 @@
 [Setup]
 AppName=JourneyMap Tools
-AppVersion=1.0
+AppVersion=1.1
 DefaultDirName={autopf}\JourneyMap Tools
 DefaultGroupName=JourneyMap
 LicenseFile=LICENSE.rtf
@@ -19,7 +19,8 @@ Source: "..\resources\jm.ico"; \
         DestDir: "{app}"
 
 Source: "..\..\..\build\launch4j\lib\*"; \
-        DestDir: "{app}/lib"
+        DestDir: "{app}/lib"; \
+        Excludes: "*linux*,*mac*"
 
 Source: "..\..\..\jdk-11.0.7+10-jre\*"; \
         DestDir: "{app}\jdk-11.0.7+10-jre"; \
@@ -42,30 +43,3 @@ Name: "{group}\Uninstall JourneyMap Tools"; \
       Filename: "{uninstallexe}"; \
       WorkingDir: "{app}"; \
       Comment: "Uninstall JourneyMap Tools"
-
-[Registry]
-; https://stackoverflow.com/a/3431379
-Root: HKLM; \
-      Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; \
-      ValueType: expandsz; \
-      ValueName: "Path"; \
-      ValueData: "{olddata};{app}"; \
-      Check: NeedsAddPath('{app}')
-
-[Code]
-{ https://stackoverflow.com/a/3431379 }
-function NeedsAddPath(Param: string): boolean;
-var
-    OrigPath: string;
-begin
-    if not RegQueryStringValue(HKEY_LOCAL_MACHINE,
-        'SYSTEM\CurrentControlSet\Control\Session Manager\Environment',
-        'Path', OrigPath)
-    then begin
-        Result := True;
-        exit;
-    end;
-    { look for the path with leading and trailing semicolon }
-    { Pos() returns 0 if not found }
-    Result := Pos(';' + Param + ';', ';' + OrigPath + ';') = 0;
-end;

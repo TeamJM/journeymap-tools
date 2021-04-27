@@ -15,6 +15,9 @@ import java.util.*
 import javax.imageio.ImageIO
 
 class ImageStitcher(val directory: File) {
+    private var blankFile: File = File.createTempFile("blank", ".png")
+    private var wroteBlankFile = false
+
     fun stitch(destination: File, gridType: GridType, task: FXTask<*>) {
         task.updateProgress(0, 1)
         task.updateTitle("Loading...")
@@ -28,7 +31,13 @@ class ImageStitcher(val directory: File) {
         var maxZ: Int = Int.MIN_VALUE
         var minZ: Int = Int.MAX_VALUE
 
+        var progress = 0L
+
         sourceFiles.forEach { it ->
+            task.updateProgress(progress, sourceFiles.size.toLong())
+            task.updateTitle("Inspecting: ${it.name} (${progress + 1} / ${sourceFiles.size})")
+            task.updateMessage("Inspecting: ${it.name} (${progress + 1} / ${sourceFiles.size})")
+
             val split = it.nameWithoutExtension.split(',')
             val (x, z) = split.map { element -> element.toInt() }.toList()
 
@@ -39,14 +48,30 @@ class ImageStitcher(val directory: File) {
             minZ = min(minZ, z)
 
             tileCoordinates[Pair(x, z)] = it
+
+            progress += 1
         }
+
+        task.updateProgress(0, 1)
+        task.updateTitle("Generating tiles...")
+        task.updateMessage("Generating tiles...")
 
         val columns = (maxX - minX) + 1
         val rows = (maxZ - minZ) + 1
         val tiles: MutableList<File> = mutableListOf()
+        val progressMax = (rows * columns).toLong()
+
+        var curZ = 0L
+        var curX = 0L
 
         for (z in minZ .. maxZ) {
             for (x in minX .. maxX) {
+                progress = ((curZ * columns) + curX)
+
+                task.updateProgress(progress, progressMax)
+                task.updateTitle("Generating: $x, $z ($progress / $progressMax)")
+                task.updateMessage("Generating: $x, $z ($progress / $progressMax)")
+
                 val pair = Pair(x, z)
 
                 if (tileCoordinates.contains(pair)) {
@@ -54,13 +79,21 @@ class ImageStitcher(val directory: File) {
                 } else {
                     tiles.add(this.getBlankImageFile())
                 }
+
+                curX += 1
             }
+
+            curZ += 1
         }
+
+        task.updateTitle("Processing...")
+        task.updateMessage("Processing...")
+        task.updateProgress(0, 1)
 
         val readers: MutableList<PngReader> = mutableListOf()
 
         (0..columns).forEach { _ ->
-            readers.add(PngReader(getBlankImageFile()))  // Populate the reader list
+            readers.add(PngReader(this.getBlankImageFile()))  // Populate the reader list
         }
 
         val targetImageInfo = ImageInfo(512 * columns, 512 * rows,8, true)
@@ -74,9 +107,6 @@ class ImageStitcher(val directory: File) {
         val gridColour = 135
 
         var destinationRow = 0
-        val progressMax = (rows * columns).toLong()
-
-        task.updateTitle("Processing...")
 
         for (row in 0 until rows) {
             // I have no idea what's going on here, porting is hard
@@ -90,6 +120,11 @@ class ImageStitcher(val directory: File) {
 
             for (x in 0 until xCursor) {
                 val sourceFile = tiles[x + row * columns]
+
+                if (sourceFile == this.blankFile) {
+                    sourceFile.inputStream()
+                }
+
                 val reader = PngReader(sourceFile.inputStream())
 
                 reader.setChunkLoadBehaviour(ChunkLoadBehaviour.LOAD_CHUNK_NEVER)
@@ -100,10 +135,11 @@ class ImageStitcher(val directory: File) {
             rowCopy@ for (sourceRow in 0 until 512) {
                 for (column in 0 until xCursor) {
                     if (sourceRow == 0) {  // Update task progress
-                        val progress = (row.toLong() * columns) + column
+                        progress = ((row.toLong() * columns) + column)
 
                         task.updateProgress(progress, progressMax)
                         task.updateMessage("Current tile: $progress / $progressMax")
+                        task.updateTitle("Current tile: $progress / $progressMax")
                     }
 
                     val sourceLine = readers[column].readRow(sourceRow) as ImageLineInt
@@ -153,21 +189,21 @@ class ImageStitcher(val directory: File) {
     }
 
     fun getBlankImageFile(): File {
-        val file = File(".", String.format("blank.png"))
-
-        if (!file.exists()) {
+        if (!this.wroteBlankFile) {
             val image = BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB)
             image.createGraphics()
 
             try {
-                ImageIO.write(image, "png", file)
-                file.setReadOnly()
-                file.deleteOnExit()
+                ImageIO.write(image, "png", blankFile)
+                this.blankFile.setReadOnly()
+                this.blankFile.deleteOnExit()
             } catch (e: IOException) {
                 e.printStackTrace(System.err)
             }
+
+            this.wroteBlankFile = true
         }
 
-        return file
+        return File(this.blankFile.absolutePath)
     }
 }
