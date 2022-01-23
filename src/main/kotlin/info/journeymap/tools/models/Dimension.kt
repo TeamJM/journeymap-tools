@@ -1,17 +1,15 @@
 package info.journeymap.tools.models
 
 import info.journeymap.tools.constants.MapType
-import javafx.collections.transformation.SortedList
 import tornadofx.isInt
 import java.io.File
 
 class Dimension(val directory: File) {
-    var id: Int = 0
+    var id: String = this.directory.name
     var mapTypes: List<MapType> = listOf()
     var layers: List<Int> = listOf()
 
     init {
-        this.id = this.directory.name.substring(3).toInt()
 
         val layers: MutableList<Int> = mutableListOf()
         val mapTypes: MutableList<MapType> = mutableListOf()
@@ -60,11 +58,11 @@ class Dimension(val directory: File) {
 
     override fun toString(): String {
         return when (this.id) {
-            0    -> "Dim ${this.id} (Overworld)"
-            1    -> "Dim ${this.id} (The End)"
-            -1   -> "Dim ${this.id} (Nether)"
+            "overworld"  -> "Dim ${this.id} (Overworld)"
+            "the_end"    -> "Dim ${this.id} (The End)"
+            "the_nether" -> "Dim ${this.id} (Nether)"
 
-            else -> "Dim ${this.id}"
+            else         -> "Dim ${this.id}"
         }
     }
 }
