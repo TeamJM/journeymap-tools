@@ -22,6 +22,7 @@ class Dimension(val directory: File) {
                     "day"   -> mapTypes.add(MapType.SURFACE_DAY)
                     "night" -> mapTypes.add(MapType.SURFACE_NIGHT)
                     "topo"  -> mapTypes.add(MapType.SURFACE_TOPO)
+                    "biome" -> mapTypes.add(MapType.BIOME)
                 }
             }
         }
@@ -48,6 +49,7 @@ class Dimension(val directory: File) {
                 MapType.SURFACE_DAY   -> this.directory.resolve("day")
                 MapType.SURFACE_NIGHT -> this.directory.resolve("night")
                 MapType.SURFACE_TOPO  -> this.directory.resolve("topo")
+                MapType.BIOME  -> this.directory.resolve("biome")
 
                 else                  -> null
             }

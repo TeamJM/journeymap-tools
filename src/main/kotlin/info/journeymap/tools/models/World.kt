@@ -10,7 +10,6 @@ class World(val directory: File) {
 
         this.directory.listFiles()!!.forEach {
             val dimension = Dimension(it)
-            println(dimension)
             if (dimension.mapTypes.isNotEmpty() || dimension.layers.isNotEmpty()) {
                 dimensions.add(dimension)
             }
